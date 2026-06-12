@@ -2,13 +2,48 @@
 
 투자 중심 **2인 가구** 재무관리 시스템입니다. Google Sheets에서 일별 지출·수입·보유 종목을 관리하고, **한눈에보기** 탭에서 KPI와 차트를 확인합니다.
 
-📖 **자세한 설명서:** [`docs/사용설명서.md`](docs/사용설명서.md) — 시트별 설명, 입력법, FAQ, **처음 배포 0→1** 전체 과정
+**GitHub:** [github.com/moonhyun-cheol/money-morny](https://github.com/moonhyun-cheol/money-morny)
+
+📖 **자세한 설명서:** [`docs/사용설명서.md`](docs/사용설명서.md)  
+📖 **다른 PC · Google 연동:** [`docs/사용설명서.md#다른-컴퓨터에서-github-받기--google-연동`](docs/사용설명서.md#다른-컴퓨터에서-github-받기--google-연동)
+
+---
+
+## 다른 컴퓨터에서 받기
+
+### 매일 쓰기만 (배우자·다른 PC)
+
+**Git · Python 불필요** — 이미 만든 Spreadsheet **URL**만 열면 됩니다.  
+다른 Gmail이면 시트 **공유(편집자)** 받으세요.
+
+### 처음 Google에 연동·배포
+
+```powershell
+git clone https://github.com/moonhyun-cheol/money-morny.git
+cd money-morny
+pip install -r requirements.txt
+```
+
+1. `config/credentials.json` 준비 ([Cloud OAuth](#1-google-cloud-최초-1회-10분) 또는 기존 PC에서 파일 복사)
+2. `python setup.py deploy` → 브라우저 Google 로그인·권한 허용
+3. Spreadsheet URL 저장 → **재무관리 → 트리거 설치**
+
+→ 전체 절차: [사용설명서 — 다른 컴퓨터에서 GitHub 받기 · Google 연동](docs/사용설명서.md#다른-컴퓨터에서-github-받기--google-연동)
 
 ---
 
 ## 처음 배포하기 (요약)
 
-> **아직 한 번도 올리지 않았다면** 아래만 따라 하세요. 상세 스크린샷·FAQ는 [사용설명서](docs/사용설명서.md)를 참고하세요.
+> **아직 한 번도 올리지 않았다면** 아래만 따라 하세요.
+
+### 0. GitHub에서 받기
+
+```powershell
+git clone https://github.com/moonhyun-cheol/money-morny.git
+cd money-morny
+```
+
+(ZIP 다운로드도 가능: GitHub **Code → Download ZIP**)
 
 ### 1. Google Cloud (최초 1회, ~10분)
 
@@ -22,7 +57,6 @@
 ### 2. PC에서 배포 실행
 
 ```powershell
-cd "c:\Users\Temp\Desktop\현철\코딩연습\재무관리 프로그램"
 pip install -r requirements.txt
 python setup.py deploy
 ```
@@ -36,8 +70,7 @@ python setup.py deploy
 2. **F5 새로고침** → **재무관리 → ⚙ 트리거 설치**
 3. **`자산_종목`** — 보유 계좌·종목 (C열 **담당자** = 설정 이름)
 4. **재무관리 → 📊 갱신 → 시세+환율+일별자산**
-
-이후 매일은 **Spreadsheet URL**만 열면 됩니다. 로컬 폴더는 재배포·수정할 때만 필요합니다.
+5. (선택) 배우자 Gmail에 시트 **공유**
 
 ---
 
@@ -63,8 +96,6 @@ python setup.py deploy
 | 가끔 | 자산_이동, 시나리오, 만기, 계좌목록 |
 | 상세 | **대시보드** (마지막 탭 — 상세 KPI) |
 
-전체 설명: [사용설명서 — 시트별 설명](docs/사용설명서.md#시트별-설명-19개-탭)
-
 ---
 
 ## 시세·환율 (중요)
@@ -79,18 +110,17 @@ python setup.py deploy
 ## 파일 구조
 
 ```
-재무관리 프로그램/
-├── README.md                 ← 이 파일 (빠른 시작)
-├── docs/
-│   └── 사용설명서.md         ← 📖 자세한 설명서
-├── setup.py                  ← python setup.py deploy
+money-morny/
+├── README.md
+├── docs/사용설명서.md      ← 📖 전체 설명 + 다른 PC Google 연동
+├── setup.py
 ├── requirements.txt
 ├── config/
-│   ├── credentials.json      ← 직접 넣음 (Git 금지)
-│   └── token.json            ← deploy 후 자동 생성
-├── deploy/                   ← 시트 생성 Python
-├── apps-script/              ← 메뉴·시세·자동화
-└── sheets/template-spec.md   ← 개발자용 시트 명세
+│   ├── credentials.json.example
+│   ├── credentials.json    ← 직접 넣음 (Git 제외)
+│   └── token.json          ← deploy 후 자동 (Git 제외)
+├── deploy/
+└── apps-script/
 ```
 
 ---
@@ -101,20 +131,17 @@ python setup.py deploy
 |------|------|
 | 메뉴 없음 | F5 새로고침, Apps Script에서 `onOpen` 실행 |
 | access blocked | OAuth **테스트 사용자**에 Gmail 추가 |
-| 403 API | API **4개** 활성화 확인 |
-| credentials 없음 | `config/credentials.json` 경로 확인 |
-
-→ 더 많은 FAQ: [사용설명서 — 문제 해결](docs/사용설명서.md#문제-해결-faq)
+| credentials 없음 | `config/credentials.json` — [연동 가이드](docs/사용설명서.md#b-4-google-cloud-연동-파일-credentialsjson) |
 
 ---
 
 ## 재배포 주의
 
 `python setup.py deploy`를 **다시 실행하면 새 Spreadsheet**가 만들어집니다.  
-기존 데이터는 유지되지 않으니 Drive에서 백업 후 진행하세요.
+가구당 **시트 1개**를 권장합니다. 재배포 전 Drive 백업.
 
 ---
 
 ## 보안
 
-`config/credentials.json`, `config/token.json` — **절대 공유·업로드 금지**
+`config/credentials.json`, `config/token.json` — **GitHub·공유 금지**
