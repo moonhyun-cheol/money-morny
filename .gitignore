@@ -1,0 +1,20 @@
+# OAuth (절대 커밋 금지)
+config/credentials.json
+config/token.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.lnk
+바로가기/
