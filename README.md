@@ -5,6 +5,7 @@
 **GitHub:** [github.com/moonhyun-cheol/money-morny](https://github.com/moonhyun-cheol/money-morny)
 
 📖 **자세한 설명서:** [`docs/사용설명서.md`](docs/사용설명서.md)  
+📖 **인생 플랜 (운정 59형):** [`docs/인생플랜.md`](docs/인생플랜.md) · Excel [`sheets/인생플랜.xlsx`](sheets/인생플랜.xlsx)  
 📖 **다른 PC · Google 연동:** [`docs/사용설명서.md#다른-컴퓨터에서-github-받기--google-연동`](docs/사용설명서.md#다른-컴퓨터에서-github-받기--google-연동)
 
 ---

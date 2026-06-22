@@ -16,7 +16,24 @@ EXT_SHEET_IDS = {
     "daily_assets": 18,
 }
 
-PERSON_OPTIONS = ["사람1", "사람2", "공동"]
+try:
+    from config.life_plan import (
+        MONTHLY_INVEST_TOTAL,
+        PERSON1_NAME,
+        PERSON2_NAME,
+        SAVE_HOUSE,
+        SAVE_ISA,
+        SAVE_YOUTH_LEAP,
+    )
+except ImportError:
+    MONTHLY_INVEST_TOTAL = 2_000_000
+    SAVE_YOUTH_LEAP = 700_000
+    SAVE_ISA = 500_000
+    SAVE_HOUSE = 550_000
+    PERSON1_NAME = "현철"
+    PERSON2_NAME = "여친"
+
+PERSON_OPTIONS = [PERSON1_NAME, "여친", "공동"]
 
 MARKETS = ["KS", "KQ", "US", "CN", ""]
 CURRENCIES = ["KRW", "USD", "CNY"]
@@ -61,10 +78,12 @@ def build_asset_rows_extended(
         "평가금액(원)", "평가손익(원)", "비중%", "시장", "통화", "적용환율",
     ]
     samples = [
-        ["ISA", "사람1-키움ISA", "사람1", "VOO", "Vanguard S&P500", 10, 450, 480, None, None, None, "US", "USD", None],
-        ["적금", "사람1-KB적금", "사람1", "", "KB적금", 1, 0, 5000000, None, None, None, "", "KRW", None],
-        ["적금", "사람2-신한적금", "사람2", "", "신한적금", 1, 0, 3000000, None, None, None, "", "KRW", None],
-        ["ISA", "사람2-키움ISA", "사람2", "005930", "삼성전자", 5, 70000, 75000, None, None, None, "KS", "KRW", None],
+        ["주택청약", f"{PERSON1_NAME}-청약통장", PERSON1_NAME, "", "주택청약종합저축", 1, 0, 6_400_000, None, None, None, "", "KRW", None],
+        ["ISA", f"{PERSON1_NAME}-ISA서민형", PERSON1_NAME, "", "MMF/예금", 1, 0, 0, None, None, None, "", "KRW", None],
+        ["적금", f"{PERSON1_NAME}-청년도약", PERSON1_NAME, "", "청년도약계좌", 1, 0, 0, None, None, None, "", "KRW", None],
+        ["연금저축", f"{PERSON1_NAME}-연금저축", PERSON1_NAME, "", "연금저축", 1, 0, 0, None, None, None, "", "KRW", None],
+        ["현금", "집마련-공동", "공동", "", "집마련통장", 1, 0, 0, None, None, None, "", "KRW", None],
+        ["현금", f"{PERSON2_NAME}-비자비상", PERSON2_NAME, "", "비자·비상", 1, 0, 0, None, None, None, "", "KRW", None],
     ]
 
     def fx_formula(r: int) -> str:
@@ -149,8 +168,8 @@ def build_extended_requests(
     # ── 만기 캘린더 ──
     mat_rows = [
         ["계좌유형", "계좌명", "상품명", "만기일", "D-day", "예상금액", "알림", "메모"],
-        ["ISA", "키움 ISA", "3년만기", "2026-12-31", None, 15000000, None, "연금 이전 예정"],
-        ["적금", "KB 적금", "1년", "2026-08-15", None, 12000000, None, ""],
+        ["ISA", f"{PERSON1_NAME}-ISA서민형", "ISA 3년", "2029-06-30", None, 0, None, "계약금"],
+        ["적금", f"{PERSON1_NAME}-청년도약", "청년도약 5년", "2031-06-30", None, 0, None, "주택 특별해지"],
     ]
     mat_data = [_row_data([_cell(0, j, v) for j, v in enumerate(mat_rows[0])])]
     for i, row in enumerate(mat_rows[1:], start=2):
@@ -201,10 +220,10 @@ def build_extended_requests(
     sc_rows = [
         ["시나리오 비교 (순자산 예측)", "", "", ""],
         ["항목", "A: 지금 매매", "B: 1년 후", "차이(B-A)"],
-        ["월 저축액", 3000000, 3000000, None],
-        ["연 수익률", 0.07, 0.07, None],
-        ["일회성 지출", 500000000, 0, None],
-        ["지출 시점(개월 후)", 0, 12, None],
+        ["월 저축액", MONTHLY_INVEST_TOTAL, MONTHLY_INVEST_TOTAL, None],
+        ["연 수익률", 0.03, 0.03, None],
+        ["일회성 지출", 420_000_000, 0, None],
+        ["지출 시점(개월 후)", 30, 0, None],
         ["예측 기간(개월)", 60, 60, ""],
         ["", "", "", ""],
         ["월", "순자산 A", "순자산 B", ""],
@@ -212,10 +231,10 @@ def build_extended_requests(
     sc_data = [_row_data([_cell(0, j, v if v is not None else "") for j, v in enumerate(sc_rows[0])])]
     for row in sc_rows[1:7]:
         sc_data.append(_row_data([_cell(0, j, v if v is not None else "") for j, v in enumerate(row)]))
-    sc_data[2] = _row_data([_cell(0, 0, "월 저축액"), _cell(0, 1, 3000000), _cell(0, 2, 3000000), _cell(0, 3, formula="=C3-B3")])
-    sc_data[3] = _row_data([_cell(0, 0, "연 수익률"), _cell(0, 1, 0.07), _cell(0, 2, 0.07), _cell(0, 3, formula="=C4-B4")])
-    sc_data[4] = _row_data([_cell(0, 0, "일회성 지출"), _cell(0, 1, 500000000), _cell(0, 2, 0), _cell(0, 3, formula="=C5-B5")])
-    sc_data[5] = _row_data([_cell(0, 0, "지출 시점(개월)"), _cell(0, 1, 0), _cell(0, 2, 12), _cell(0, 3, formula="=C6-B6")])
+    sc_data[2] = _row_data([_cell(0, 0, "월 저축액"), _cell(0, 1, MONTHLY_INVEST_TOTAL), _cell(0, 2, MONTHLY_INVEST_TOTAL), _cell(0, 3, formula="=C3-B3")])
+    sc_data[3] = _row_data([_cell(0, 0, "연 수익률"), _cell(0, 1, 0.03), _cell(0, 2, 0.03), _cell(0, 3, formula="=C4-B4")])
+    sc_data[4] = _row_data([_cell(0, 0, "일회성 지출"), _cell(0, 1, 420_000_000), _cell(0, 2, 0), _cell(0, 3, formula="=C5-B5")])
+    sc_data[5] = _row_data([_cell(0, 0, "지출 시점(개월)"), _cell(0, 1, 30), _cell(0, 2, 0), _cell(0, 3, formula="=C6-B6")])
     sc_data.append(_row_data([_cell(0, 0, "월"), _cell(0, 1, "순자산 A"), _cell(0, 2, "순자산 B"), _cell(0, 3, "차이")]))
     for m in range(0, 61):
         r = 10 + m  # sheet row 10 = month 0

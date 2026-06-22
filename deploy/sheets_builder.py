@@ -6,6 +6,22 @@ from typing import Any
 
 from deploy.sheets_extended import build_asset_rows_extended, build_extended_requests, extended_sheet_defs
 
+try:
+    from config.life_plan import (
+        GOAL_DATE,
+        GOAL_NET_WORTH,
+        LIABILITY_SAMPLE as LIFE_LIABILITIES,
+        MONTHLY_BUDGET as LIFE_MONTHLY_BUDGET,
+        PERSON1_NAME,
+        PERSON2_NAME,
+    )
+except ImportError:
+    PERSON1_NAME, PERSON2_NAME = "현철", "여친"
+    GOAL_NET_WORTH = 150_000_000
+    GOAL_DATE = "2032-06-30"
+    LIFE_MONTHLY_BUDGET = None
+    LIFE_LIABILITIES = None
+
 SHEET_IDS = {
     "dashboard": 0,
     "settings": 1,
@@ -50,18 +66,22 @@ COLORS = {
     "bg_bad": {"red": 0.98, "green": 0.85, "blue": 0.85},
 }
 
-# 월 예산 기본값 (설정 시트 초기값)
-DEFAULT_BUDGETS: dict[str, int] = {
-    "식비": 600_000,
-    "교통": 200_000,
-    "쇼핑": 300_000,
-    "고정비": 500_000,
-    "의료": 100_000,
-    "여가": 200_000,
-    "대출상환": 0,
-    "대출이자": 0,
-    "기타": 150_000,
-}
+# 월 예산 기본값 (설정 시트 초기값) — config/life_plan.py 우선
+DEFAULT_BUDGETS: dict[str, int] = (
+    LIFE_MONTHLY_BUDGET
+    if LIFE_MONTHLY_BUDGET
+    else {
+        "식비": 750_000,
+        "교통": 100_000,
+        "쇼핑": 250_000,
+        "고정비": 1_200_000,
+        "의료": 0,
+        "여가": 0,
+        "대출상환": 92_000,
+        "대출이자": 0,
+        "기타": 50_000,
+    }
+)
 
 
 def create_spreadsheet(sheets_service) -> str:
@@ -113,10 +133,10 @@ def build_all_updates(spreadsheet_id: str, docs_template_id: str = "") -> list[d
     # ── 설정 시트 ──
     settings_rows = [
         ["항목", "값", "설명"],
-        ["Person1 이름", "사람1", "수입·지출 담당자1"],
-        ["Person2 이름", "사람2", "수입·지출 담당자2"],
-        ["목표 순자산", 100000000, "원 단위"],
-        ["목표 날짜", "2030-12-31", "선택"],
+        ["Person1 이름", PERSON1_NAME, "수입·지출 담당자1"],
+        ["Person2 이름", PERSON2_NAME, "수입·지출 담당자2"],
+        ["목표 순자산", GOAL_NET_WORTH, "원 단위"],
+        ["목표 날짜", GOAL_DATE, "운정 59형 입주"],
         ["추세 계산 개월수", 6, "목표 예측용"],
         ["Docs 템플릿 ID", docs_template_id, "자동 생성됨"],
         ["Drive 폴더 ID", "", "리포트 저장 폴더 (선택)"],
@@ -245,9 +265,27 @@ def build_all_updates(spreadsheet_id: str, docs_template_id: str = "") -> list[d
         "연결자산",
         "메모",
     ]
-    liability_sample = [
-        ["주택담보대출", "○○아파트 담보대출", 300000000, 280000000, 3.5, 1500000, "2055-06-01", "○○아파트", ""],
-    ]
+    liability_sample = (
+        [
+            [
+                row["type"],
+                row["name"],
+                row["principal"],
+                row["balance"],
+                row["rate"],
+                row["monthly"],
+                row["maturity"],
+                "",
+                row["memo"],
+            ]
+            for row in LIFE_LIABILITIES
+        ]
+        if LIFE_LIABILITIES
+        else [
+            ["신용대출", "일반대출", 3000000, 3000000, 6.6, 92000, "2029-06-01", "", "고정비 반영"],
+            ["기타", "햇살론+장학금", 3000000, 3000000, 3.0, 0, "", "", "최소 상환"],
+        ]
+    )
     liability_rows = [_row_data([_cell(0, j, v) for j, v in enumerate(liability_headers)])]
     for sample in liability_sample:
         liability_rows.append(_row_data([_cell(0, j, v) for j, v in enumerate(sample)]))
