@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any, Callable
 
+from deploy.sheets_life_line import build_life_line_requests, life_phase_lookup_formulas, life_sheet_defs
+
 EXT_SHEET_IDS = {
     "visual": 10,
     "tax_limits": 11,
@@ -62,6 +64,7 @@ def extended_sheet_defs() -> list[tuple[str, int]]:
         ("이동_템플릿", 16),
         ("계좌목록", 17),
         ("자산_일별이력", 18),
+        *life_sheet_defs(),
     ]
 
 
@@ -335,13 +338,38 @@ def build_extended_requests(
         ('=HYPERLINK("#gid=2","📊 자산")', '=HYPERLINK("#gid=3","💸 지출")', '=HYPERLINK("#gid=4","💰 수입")'),
         ('=HYPERLINK("#gid=9","🏦 부채")', '=HYPERLINK("#gid=18","📈 일별추이")', '=HYPERLINK("#gid=0","📋 상세KPI")'),
         ('=HYPERLINK("#gid=11","세금")', '=HYPERLINK("#gid=13","DSR")', '=HYPERLINK("#gid=14","시나리오")'),
+        ('=HYPERLINK("#gid=19","🗓 인생라인")', '=HYPERLINK("#gid=20","라이프페이즈")', '=HYPERLINK("#gid=21","분기체크")'),
     ]
+    lf = life_phase_lookup_formulas()
     vis_data = [
         _row_data([_cell(0, 0, "✦ 재무관리 한눈에 보기")]),
         _row_data([_cell(0, 0, formula=nav_links[0][0]), _cell(0, 1, formula=nav_links[0][1]), _cell(0, 2, formula=nav_links[0][2])]),
         _row_data([_cell(0, 0, formula=nav_links[1][0]), _cell(0, 1, formula=nav_links[1][1]), _cell(0, 2, formula=nav_links[1][2])]),
         _row_data([_cell(0, 0, formula=nav_links[2][0]), _cell(0, 1, formula=nav_links[2][1]), _cell(0, 2, formula=nav_links[2][2])]),
-        _row_data([_cell(0, 0, "💡 매일: 지출·수입  |  주 1회: 메뉴 → 시세+환율 갱신")]),
+        _row_data([_cell(0, 0, formula=nav_links[3][0]), _cell(0, 1, formula=nav_links[3][1]), _cell(0, 2, formula=nav_links[3][2])]),
+        _row_data([_cell(0, 0, "💡 매일: 지출·수입  |  주 1회: 메뉴 → 시세+환율 갱신  |  분기: 분기체크 탭")]),
+        _row_data([_cell(0, 0, "🎯 인생 단계 (오늘 기준)"), _cell(0, 1, "값"), _cell(0, 2, "메모")]),
+        _row_data([
+            _cell(0, 0, "현재 페이즈"),
+            _cell(0, 1, formula=f'{lf["phase_id"]}&" "&{lf["phase_name"]}'),
+            _cell(0, 2, formula=lf["belt"]),
+        ]),
+        _row_data([
+            _cell(0, 0, "이번 달 할 일"),
+            _cell(0, 1, formula=lf["tasks"]),
+            _cell(0, 2, ""),
+        ]),
+        _row_data([
+            _cell(0, 0, "목표 순저축"),
+            _cell(0, 1, formula=lf["target_save"]),
+            _cell(0, 2, formula='=IF(B9="","",IF(B14>=B9,"✅ 달성","△ "&TEXT(B9-B14,"#,##0")&" 부족"))'),
+        ]),
+        _row_data([
+            _cell(0, 0, "페이즈 목표 여유"),
+            _cell(0, 1, formula=lf["target_free"]),
+            _cell(0, 2, formula='=IF(B10<0,"소득↑ 구간",IF(B10=0,"여유 0·스프린트",""))'),
+        ]),
+        _row_data([_cell(0, 0, "")]),
         _row_data([_cell(0, 0, "핵심 지표"), _cell(0, 1, "값"), _cell(0, 2, "상태")]),
         _row_data([
             _cell(0, 0, "순자산"),
@@ -369,9 +397,12 @@ def build_extended_requests(
             _cell(0, 2, formula='=IF(월간집계!B14="","","개월 버틸 수 있음")'),
         ]),
     ]
+    vis_row_count = len(vis_data)
+    hidden_start = vis_row_count
+    chart_anchor = vis_row_count + 1
     reqs.append({"updateCells": {"range": {"sheetId": vis, "startRowIndex": 0, "startColumnIndex": 0}, "rows": vis_data, "fields": "userEnteredValue"}})
 
-    # 차트용 숨김 데이터 (Z~AB 열, row 10~13)
+    # 차트용 숨김 데이터 (Z~AB 열)
     hidden_person = [
         _row_data([_cell(0, 0, "담당자"), _cell(0, 1, "자산(원)")]),
         _row_data([_cell(0, 0, formula="=설정!B2"), _cell(0, 1, formula="=SUMIF('자산_종목'!C:C,설정!B2,'자산_종목'!I:I)")]),
@@ -380,7 +411,7 @@ def build_extended_requests(
     ]
     reqs.append({
         "updateCells": {
-            "range": {"sheetId": vis, "startRowIndex": 9, "startColumnIndex": 25, "endRowIndex": 13, "endColumnIndex": 27},
+            "range": {"sheetId": vis, "startRowIndex": hidden_start, "startColumnIndex": 25, "endRowIndex": hidden_start + 4, "endColumnIndex": 27},
             "rows": hidden_person,
             "fields": "userEnteredValue",
         }
@@ -390,7 +421,8 @@ def build_extended_requests(
     reqs.extend(_extended_formatting(ex, COLORS))
     reqs.extend(_extended_conditional_formatting(ex, COLORS))
     reqs.extend(_extended_validation(ex, MARKETS, CURRENCIES))
-    reqs.extend(_extended_charts(ex, sid))
+    reqs.extend(_extended_charts(ex, sid, hidden_start=hidden_start, chart_anchor=chart_anchor))
+    reqs.extend(build_life_line_requests(_cell, _row_data, COLORS))
     reqs.append({
         "updateSheetProperties": {
             "properties": {"sheetId": ex["visual"], "index": 0, "tabColor": {"red": 0.2, "green": 0.45, "blue": 0.75}},
@@ -405,6 +437,9 @@ def build_extended_requests(
         (ex["fx"], {"red": 0.3, "green": 0.6, "blue": 0.85}),
         (ex["account_list"], {"red": 0.55, "green": 0.75, "blue": 0.55}),
         (ex["daily_assets"], {"red": 0.35, "green": 0.55, "blue": 0.85}),
+        (19, {"red": 0.55, "green": 0.35, "blue": 0.75}),
+        (20, {"red": 0.85, "green": 0.45, "blue": 0.55}),
+        (21, {"red": 0.45, "green": 0.65, "blue": 0.55}),
     ]:
         reqs.append({
             "updateSheetProperties": {
@@ -554,7 +589,7 @@ def _extended_validation(ex: dict, MARKETS: list, CURRENCIES: list) -> list[dict
     ]
 
 
-def _extended_charts(ex: dict, sid: dict) -> list[dict]:
+def _extended_charts(ex: dict, sid: dict, hidden_start: int = 9, chart_anchor: int = 12) -> list[dict]:
     vis = ex["visual"]
     tax = ex["tax_limits"]
     sc = ex["scenario"]
@@ -565,6 +600,9 @@ def _extended_charts(ex: dict, sid: dict) -> list[dict]:
 
     def sr(sheet_id, r1, r2, c1, c2):
         return {"sources": [{"sheetId": sheet_id, "startRowIndex": r1, "endRowIndex": r2, "startColumnIndex": c1, "endColumnIndex": c2}]}
+
+    pie_data_start = hidden_start + 1
+    pie_data_end = hidden_start + 4
 
     daily_growth_chart = {
         "title": "일별 자산 추이 (담당자·합계)",
@@ -589,10 +627,10 @@ def _extended_charts(ex: dict, sid: dict) -> list[dict]:
         # 한눈에보기: 담당자별 자산 (도넛 1개)
         {"addChart": {"chart": {"spec": {"title": "담당자별 자산", "pieChart": {
             "legendPosition": "LABELED_LEGEND",
-            "domain": {"sourceRange": sr(vis, 10, 13, 25, 26)},
-            "series": {"sourceRange": sr(vis, 10, 13, 26, 27)},
+            "domain": {"sourceRange": sr(vis, pie_data_start, pie_data_end, 25, 26)},
+            "series": {"sourceRange": sr(vis, pie_data_start, pie_data_end, 26, 27)},
             "pieHole": 0.45,
-        }}, "position": {"overlayPosition": {"anchorCell": {"sheetId": vis, "rowIndex": 12, "columnIndex": 0}, "widthPixels": 380, "heightPixels": 300}}}}},
+        }}, "position": {"overlayPosition": {"anchorCell": {"sheetId": vis, "rowIndex": chart_anchor, "columnIndex": 0}, "widthPixels": 380, "heightPixels": 300}}}}},
         # 한눈에보기: 예산 vs 실적
         {"addChart": {"chart": {"spec": {"title": "예산 vs 실적 (이번 달)", "basicChart": {
             "chartType": "COLUMN", "legendPosition": "BOTTOM_LEGEND",
@@ -603,7 +641,7 @@ def _extended_charts(ex: dict, sid: dict) -> list[dict]:
                 {"series": {"sourceRange": sr(monthly, 15, 25, 2, 3)}, "targetAxis": "LEFT_AXIS"},
             ],
             "headerCount": 1,
-        }}, "position": {"overlayPosition": {"anchorCell": {"sheetId": vis, "rowIndex": 12, "columnIndex": 5}, "widthPixels": 480, "heightPixels": 300}}}}},
+        }}, "position": {"overlayPosition": {"anchorCell": {"sheetId": vis, "rowIndex": chart_anchor, "columnIndex": 5}, "widthPixels": 480, "heightPixels": 300}}}}},
         # 자산_일별이력: 일별 추이 (유일)
         {"addChart": {"chart": {"spec": daily_growth_chart, "position": {"overlayPosition": {"anchorCell": {"sheetId": daily, "rowIndex": 3, "columnIndex": 6}, "widthPixels": 720, "heightPixels": 340}}}}},
         # 전용 시트 차트
