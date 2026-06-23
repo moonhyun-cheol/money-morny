@@ -23,13 +23,11 @@ try:
         PERSON2_NAME,
         SAVE_HOUSE,
         SAVE_ISA,
-        SAVE_YOUTH_LEAP,
     )
 except ImportError:
-    MONTHLY_INVEST_TOTAL = 2_000_000
-    SAVE_YOUTH_LEAP = 700_000
+    MONTHLY_INVEST_TOTAL = 2_008_000
     SAVE_ISA = 500_000
-    SAVE_HOUSE = 550_000
+    SAVE_HOUSE = 1_258_000
     PERSON1_NAME = "현철"
     PERSON2_NAME = "여친"
 
@@ -80,7 +78,6 @@ def build_asset_rows_extended(
     samples = [
         ["주택청약", f"{PERSON1_NAME}-청약통장", PERSON1_NAME, "", "주택청약종합저축", 1, 0, 6_400_000, None, None, None, "", "KRW", None],
         ["ISA", f"{PERSON1_NAME}-ISA서민형", PERSON1_NAME, "", "MMF/예금", 1, 0, 0, None, None, None, "", "KRW", None],
-        ["적금", f"{PERSON1_NAME}-청년도약", PERSON1_NAME, "", "청년도약계좌", 1, 0, 0, None, None, None, "", "KRW", None],
         ["연금저축", f"{PERSON1_NAME}-연금저축", PERSON1_NAME, "", "연금저축", 1, 0, 0, None, None, None, "", "KRW", None],
         ["현금", "집마련-공동", "공동", "", "집마련통장", 1, 0, 0, None, None, None, "", "KRW", None],
         ["현금", f"{PERSON2_NAME}-비자비상", PERSON2_NAME, "", "비자·비상", 1, 0, 0, None, None, None, "", "KRW", None],
@@ -169,7 +166,6 @@ def build_extended_requests(
     mat_rows = [
         ["계좌유형", "계좌명", "상품명", "만기일", "D-day", "예상금액", "알림", "메모"],
         ["ISA", f"{PERSON1_NAME}-ISA서민형", "ISA 3년", "2029-06-30", None, 0, None, "계약금"],
-        ["적금", f"{PERSON1_NAME}-청년도약", "청년도약 5년", "2031-06-30", None, 0, None, "주택 특별해지"],
     ]
     mat_data = [_row_data([_cell(0, j, v) for j, v in enumerate(mat_rows[0])])]
     for i, row in enumerate(mat_rows[1:], start=2):
