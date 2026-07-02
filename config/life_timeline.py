@@ -9,6 +9,7 @@ from config.life_plan import (
     CHILD_COST_STANDARD,
     CHILD_FOOD_EXTRA,
     FIXED_LOAN_KAKAO,
+    FIXED_JULY_TOTAL,
     FREE_CASH_AFTER_MOVE_IN,
     HOUSING_GOAL,
     INCOME_GROWTH_RATE,
@@ -21,6 +22,7 @@ from config.life_plan import (
     MORTGAGE_MONTHLY_DD,
     MOVE_IN_CASH_TARGET,
     NET_INCOME_HOUSEHOLD,
+    PAYROLL_SCHEDULE_2026,
     PERSON1_NAME,
     PERSON2_NAME,
     SAVE_HOUSE,
@@ -53,12 +55,12 @@ _YEAR_PHASE: dict[int, tuple[str, str, str]] = {
 }
 
 TIMELINE_EVENTS: dict[int, list[str]] = {
-    2026: ["7월 현철 월급만", "8월 여친 첫 급여·자산분배", "저축 루틴 시작"],
+    2026: ["5/18 입사", "7/1 여친 근무", "8월~ 여친 소득", "10월~ 가구 470만"],
     2027: ["D-10 연장(TOPIK6)", "집자금 ~4천만", "비혼 세금최적화"],
     2028: ["혼인신고·F-6", "신혼특공 청약", "예식 1~2천만"],
     2029: ["카카오 대출 종료(6월)", "분양 계약·계약금", "집자금 ~6천만"],
     2030: ["중도금·집단대출", "입주 자금 1억 목표"],
-    2031: [f"운정 입주·디딤돌 {MORTGAGE_PRINCIPAL // 10_000:,}만", "집마련 저축 중단", "월 여유 ~63만"],
+    2031: [f"운정 입주·디딤돌 {MORTGAGE_PRINCIPAL // 10_000:,}만", "집마련 저축 중단", f"월 여유 ~{FREE_CASH_AFTER_MOVE_IN // 10_000}만"],
     2032: ["대출·관리비 적응", "비상금 1,500만"],
     2033: [f"출산 권장({CHILD_BIRTH_RECOMMENDED})", "육아비·ISA 조정"],
     2034: ["소득 성장·여유 회복", "용돈·외식 확대"],
@@ -69,8 +71,8 @@ TIMELINE_EVENTS: dict[int, list[str]] = {
 }
 
 QUARTERLY_MILESTONES: list[tuple[str, str, str, str]] = [
-    ("2026-Q3", "재무", "7월 생존·CMA", "고정비 123만"),
-    ("2026-Q4", "재무", "8월~ 자산분배 고정", "저축 208만/월"),
+    ("2026-Q3", "재무", "7월 생존·CMA", f"고정비 {FIXED_JULY_TOTAL // 10_000}만·여친 고정 포함"),
+    ("2026-Q4", "재무", "8월~ 자산분배 고정", f"저축 {MONTHLY_INVEST_TOTAL // 10_000}만/월"),
     ("2027-Q1", "비자", "D-10 연장", "TOPIK 6급"),
     ("2027-Q4", "재무", "집자금 4천만", "청약 유지"),
     ("2028-Q2", "가족", "혼인신고", "F-6 전환"),
@@ -79,17 +81,24 @@ QUARTERLY_MILESTONES: list[tuple[str, str, str, str]] = [
     ("2029-Q3", "주택", "분양 계약", "계약금 5천만"),
     ("2030-Q4", "주택", "입주 준비", "현금 1억"),
     ("2031-Q2", "주택", "입주·이사", "디딤돌 실행"),
-    ("2032-Q4", "재무", "비상금 1,500만", "여유 63만 배분"),
+    ("2032-Q4", "재무", "비상금 1,500만", f"여유 {FREE_CASH_AFTER_MOVE_IN // 10_000}만 배분"),
     ("2033-Q2", "가족", "출산(권장)", "육아비 70만"),
     ("2034-Q4", "재무", "저축+여유 100만+", "소득 연4%"),
 ]
 
 
+def _payroll_row_for_month(year: int, month: int) -> dict[str, int | str | bool] | None:
+    for row in PAYROLL_SCHEDULE_2026 if year == 2026 else []:
+        if row["pay_year"] == year and row["pay_month"] == month:
+            return row
+    return None
+
+
 def _monthly_net_for_year(year: int) -> int:
     """해당 연도 대표 월 세후 가구 소득."""
     if year == 2026:
-        # 7월만 250만, 8~12월 440만
-        return int((JULY_NET_INCOME + NET_INCOME_HOUSEHOLD * 5) / 6)
+        nets = [int(r["household_net"]) for r in PAYROLL_SCHEDULE_2026 if int(r["pay_month"]) >= 7]
+        return int(sum(nets) / len(nets)) if nets else JULY_NET_INCOME
     if year < MOVE_IN_YEAR:
         return int(NET_INCOME_HOUSEHOLD * (1 + INCOME_GROWTH_RATE) ** (year - 2026))
     return household_net_after_years(year - MOVE_IN_YEAR)
@@ -113,9 +122,11 @@ def _simulate_liquid_to_year(end_year: int) -> int:
     end_m = 12
     y, m = start_y, start_m
     while (y < end_year) or (y == end_year and m <= end_m):
-        if y == 2026 and m == 7:
-            bal = bal * (1 + rate) + JULY_BUFFER
-        elif (y > 2026) or (y == 2026 and m >= 8):
+        if y == 2026 and m >= 7:
+            pr = _payroll_row_for_month(y, m)
+            if pr:
+                bal = bal * (1 + rate) + int(pr["save_total"])
+        else:
             bal = bal * (1 + rate) + monthly
         m += 1
         if m > 12:

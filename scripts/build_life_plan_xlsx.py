@@ -18,7 +18,15 @@ from config.life_plan import (  # noqa: E402
     ANNUAL_INCOME_P1,
     ANNUAL_INCOME_P2,
     BANK_ACCOUNTS,
+    REAL_WALLETS,
+    ROLE_SLOT_COUNT,
+    ACCOUNTS_TO_OPEN,
+    CHEONGYAK_BALANCE,
+    PHYSICAL_ACCOUNT_COUNT,
     ASSET_ALLOCATION_AUGUST,
+    COHAB_P1_TRANSFER,
+    COHAB_HUB_ID,
+    COHAB_HUB_INSTITUTION,
     CONTRACT_DEPOSIT_TARGET,
     HOUSE_FUND_SOURCES,
     FIXED_COST_ITEMS,
@@ -45,7 +53,6 @@ from config.life_plan import (  # noqa: E402
     HOUSING_GOAL,
     JULY_BUFFER,
     JULY_NET_INCOME,
-    KPASS_RATE_YOUTH,
     BELT_COMFORT_FROM,
     BELT_TIGHT_PEAK_UNTIL,
     LIFE_PHASES,
@@ -69,8 +76,15 @@ from config.life_plan import (  # noqa: E402
     NET_INCOME_HOUSEHOLD,
     NET_INCOME_P1,
     NET_INCOME_P2,
+    NET_INCOME_P1_PROBATION,
+    PAYROLL_SCHEDULE_2026,
+    P1_PAYDAY_NOTE,
+    P1_PROBATION_RATE,
+    P1_START_DATE,
     PARKING_P1,
     PARKING_P2,
+    P2_FIRST_PAYCHECK,
+    P2_TOSS_ACCOUNT_ID,
     PERSON1_NAME,
     PERSON2_NAME,
     PENSION_PLAN_P1,
@@ -88,7 +102,6 @@ from config.life_plan import (  # noqa: E402
     SUB_LIMBUS,
     SUB_SPOTIFY,
     SUB_YOUTUBE,
-    TRANSIT_LEISURE,
     TRANSIT_P1_DAYS,
     TRANSIT_P1_FARE,
     TRANSIT_P2_DAYS,
@@ -124,7 +137,7 @@ def sheet_overview(wb: Workbook) -> None:
     ws["A1"].font = TITLE_FONT
     rows = [
         ("작성일", date.today().isoformat()),
-        ("Person1", f"{PERSON1_NAME} (연 {ANNUAL_INCOME_P1:,}만)"),
+        ("Person1", f"{PERSON1_NAME} (연 {ANNUAL_INCOME_P1:,}만·{P1_START_DATE.isoformat()} 입사·수습 {int(P1_PROBATION_RATE*100)}%)"),
         ("Person2", f"{PERSON2_NAME} (연 {ANNUAL_INCOME_P2:,}만)"),
         ("혼인", MARRIAGE_PLAN),
         ("주택 목표", HOUSING_GOAL),
@@ -197,7 +210,7 @@ def sheet_fixed_costs(wb: Workbook) -> None:
         (13, "림버스컴퍼니", SUB_LIMBUS, "9900+4900"),
         (14, "Spotify", SUB_SPOTIFY, ""),
         (15, "YouTube Premium", SUB_YOUTUBE, ""),
-        (16, "Cursor", SUB_CURSOR_KRW, "$20/월"),
+        (16, "Cursor", SUB_CURSOR_KRW, "Pro+ 12만/월"),
         (17, "장학금 이자", FIXED_LOAN_SCHOLAR_INTEREST, "이자만"),
         (18, "카카오 긴급생활", FIXED_LOAN_KAKAO, "6.7%·36m"),
         (19, "건강보험(여친)", FIXED_NHIS_P2, "직장가입 후"),
@@ -207,10 +220,10 @@ def sheet_fixed_costs(wb: Workbook) -> None:
         ws.cell(row=r, column=4, value=amount)
         ws.cell(row=r, column=5, value=memo)
 
-    ws.cell(row=21, column=1, value="[교통] K-패스 청년30%+여유10%")
+    ws.cell(row=21, column=1, value="[교통] 정가 (요금×출근일)")
     transit = [
         (22, f"정가-{PERSON1_NAME}", TRANSIT_P1_FARE, TRANSIT_P1_DAYS, "왕복 9800"),
-        (23, f"정가-{PERSON2_NAME}", TRANSIT_P2_FARE, TRANSIT_P2_DAYS, "왕복 3500"),
+        (23, f"정가-{PERSON2_NAME}", TRANSIT_P2_FARE, TRANSIT_P2_DAYS, "월화수토일·왕복 3500"),
     ]
     for r, name, fare, days, memo in transit:
         ws.cell(row=r, column=1, value=name)
@@ -223,11 +236,12 @@ def sheet_fixed_costs(wb: Workbook) -> None:
     ws.cell(row=24, column=4, value="=D22+D23")
     ws.cell(row=25, column=1, value=f"교통-{PERSON1_NAME}")
     ws.cell(row=25, column=4, value=FIXED_TRANSPORT_P1)
-    ws.cell(row=25, column=5, value="K-패스 30%+10%")
+    ws.cell(row=25, column=5, value="왕복 9800×22")
     ws.cell(row=26, column=1, value=f"교통-{PERSON2_NAME}")
     ws.cell(row=26, column=4, value=FIXED_TRANSPORT_P2)
+    ws.cell(row=26, column=5, value="왕복 3500×22")
     ws.cell(row=27, column=1, value="교통 합계")
-    ws.cell(row=27, column=4, value=FIXED_TRANSPORT)
+    ws.cell(row=27, column=4, value="=D25+D26")
     ws.cell(row=33, column=1, value="고정비 합계")
     ws.cell(row=33, column=4, value="=SUM(D5:D19)+D27")
 
@@ -247,7 +261,7 @@ def sheet_per_person_fixed(wb: Workbook) -> None:
         r += 1
     ws.cell(row=r, column=2, value="합계")
     ws.cell(row=r, column=3, value=FIXED_P1_TOTAL)
-    ws.cell(row=r, column=4, value=f"파킹 {PARKING_P1:,} 권장")
+    ws.cell(row=r, column=4, value=f"개인고정 상시 {PARKING_P1:,} · 공동이체 {COHAB_P1_TRANSFER:,}")
     r += 2
     for name, amount, memo in FIXED_P2_ITEMS:
         ws.cell(row=r, column=1, value=PERSON2_NAME)
@@ -257,43 +271,62 @@ def sheet_per_person_fixed(wb: Workbook) -> None:
         r += 1
     ws.cell(row=r, column=2, value="합계")
     ws.cell(row=r, column=3, value=FIXED_P2_TOTAL)
-    ws.cell(row=r, column=4, value=f"파킹 {PARKING_P2:,} 권장")
+    ws.cell(row=r, column=4, value=f"본인고정 {PARKING_P2:,} · 동거분담→{COHAB_HUB_INSTITUTION}")
 
 
 def sheet_july(wb: Workbook) -> None:
     ws = wb.create_sheet("7월생존")
-    ws["A1"] = "2026년 7월 — 현철 월급만 (여친 근무 시작·첫 급여 8월)"
+    ws["A1"] = "2026년 7월 — 수습 세후 ~216만 (6월 근무분·5/18 입사)"
     ws["A1"].font = TITLE_FONT
-    _header_row(ws, 3, ["구분", "항목", "월(원)", "메모"])
+    ws["A2"] = f"여친 소득 8월 입금(7/1~ 근무) · {P1_PAYDAY_NOTE}"
+    _header_row(ws, 4, ["구분", "항목", "월(원)", "메모"])
     rows = [
-        ("수입", "현철 세후", JULY_NET_INCOME, ""),
-        ("고정비", "가구 전체 (건보 제외)", FIXED_JULY_TOTAL, "여친 미취업"),
-        ("식비", "장보기 (축소)", FOOD_JULY, "배달·외식 최소"),
+        ("수입", f"{PERSON1_NAME} 세후 (수습 90%)", JULY_NET_INCOME, "정규 ~240만은 10월~"),
+        ("수입", f"{PERSON2_NAME}", 0, f"첫 급여 {P2_FIRST_PAYCHECK}"),
+        ("고정비", "가구 (건보 제외·여친 전화·교통 포함)", FIXED_JULY_TOTAL, "소득은 8월~"),
+        ("식비", "장보기 (축소)", FOOD_JULY, f"{COHAB_HUB_INSTITUTION}"),
         ("용돈", PERSON1_NAME, ALLOWANCE_P1_JULY, "15→10만"),
         ("용돈", PERSON2_NAME, ALLOWANCE_P2_JULY, "0"),
         ("저축", "ISA·연금", 0, "8월부터 재개"),
         ("잔액", "삼성 CMA", JULY_BUFFER, "집마련·비상"),
     ]
-    for r, row in enumerate(rows, 4):
+    for r, row in enumerate(rows, 5):
         for c, v in enumerate(row, 1):
             ws.cell(row=r, column=c, value=v)
 
 
 def sheet_accounts(wb: Workbook) -> None:
     ws = wb.create_sheet("통장구조")
-    ws["A1"] = "급여·파킹·고정비·용돈·저축 분리"
+    ws["A1"] = f"물리 통장 {PHYSICAL_ACCOUNT_COUNT}개 · 역할 슬롯 {ROLE_SLOT_COUNT}개"
     ws["A1"].font = TITLE_FONT
-    _header_row(ws, 3, ["ID", "역할", "명의", "금융사", "월 입금", "용도"])
-    for r, acct in enumerate(BANK_ACCOUNTS, 4):
+    ws["A2"] = f"청약 {CHEONGYAK_BALANCE:,}원 · 신규 개설 {len(ACCOUNTS_TO_OPEN)}건"
+    _header_row(ws, 4, ["명의", "금융사", "담당 역할"])
+    for r, w in enumerate(REAL_WALLETS, 5):
+        ws.cell(row=r, column=1, value=w["owner"])
+        ws.cell(row=r, column=2, value=w["institution"])
+        ws.cell(row=r, column=3, value=w["roles"])
+    nr = len(REAL_WALLETS) + 6
+    if ACCOUNTS_TO_OPEN:
+        ws.cell(row=nr, column=1, value="★ 신규 개설")
+        _header_row(ws, nr + 1, ["명의", "금융사", "용도", "메모"])
+        for r, row in enumerate(ACCOUNTS_TO_OPEN, nr + 2):
+            ws.cell(row=r, column=1, value=row["owner"])
+            ws.cell(row=r, column=2, value=row["institution"])
+            ws.cell(row=r, column=3, value=row["purpose"])
+            ws.cell(row=r, column=4, value=row.get("note", ""))
+        sr = nr + len(ACCOUNTS_TO_OPEN) + 3
+    else:
+        sr = nr
+    ws.cell(row=sr, column=1, value="월 이체 상세")
+    ws.cell(row=sr, column=3, value="아래 슬롯별 금액")
+    _header_row(ws, sr + 1, ["ID", "역할", "명의", "금융사", "월 입금", "용도"])
+    for r, acct in enumerate(BANK_ACCOUNTS, sr + 2):
         ws.cell(row=r, column=1, value=acct["id"])
         ws.cell(row=r, column=2, value=acct["role"])
         ws.cell(row=r, column=3, value=acct["owner"])
         ws.cell(row=r, column=4, value=acct["institution"])
         ws.cell(row=r, column=5, value=acct["monthly_in"])
         ws.cell(row=r, column=6, value=acct["purpose"])
-    hr = len(BANK_ACCOUNTS) + 5
-    ws.cell(row=hr, column=1, value="급여일 흐름")
-    ws.cell(row=hr, column=6, value="급여=고정비(KB) · 집마련=CMA/파킹 · 용돈·ISA·연금 분리")
 
 
 def sheet_house_fund(wb: Workbook) -> None:
@@ -304,13 +337,46 @@ def sheet_house_fund(wb: Workbook) -> None:
             ws.cell(row=r, column=c, value=v)
 
 
-def sheet_asset_allocation(wb: Workbook) -> None:
-    ws = wb.create_sheet("8월자산분배")
-    ws["A1"] = "2026년 8월~ — 급여일+1 자동이체 (세후 440만)"
+def sheet_payroll_2026(wb: Workbook) -> None:
+    ws = wb.create_sheet("2026급여배분")
+    ws["A1"] = f"2026 급여 입금·자산 배분 ({P1_START_DATE.isoformat()} 입사 · 수습 {int(P1_PROBATION_RATE*100)}%)"
     ws["A1"].font = TITLE_FONT
-    _header_row(ws, 3, ["순서", "항목", PERSON1_NAME, PERSON2_NAME, "목적 계좌"])
+    ws["A2"] = P1_PAYDAY_NOTE
+    _header_row(
+        ws,
+        4,
+        [
+            "입금월",
+            "근무월",
+            "현철",
+            "여친",
+            "합계",
+            "저축",
+            "집마련",
+            "비고",
+        ],
+    )
+    for i, row in enumerate(PAYROLL_SCHEDULE_2026, 5):
+        ws.cell(row=i, column=1, value=row["label"])
+        ws.cell(row=i, column=2, value=f"{row['work_year']}-{int(row['work_month']):02d}")
+        ws.cell(row=i, column=3, value=row["p1_net"])
+        ws.cell(row=i, column=4, value=row["p2_net"])
+        ws.cell(row=i, column=5, value=row["household_net"])
+        ws.cell(row=i, column=6, value=row["save_total"])
+        ws.cell(row=i, column=7, value=row["save_house"])
+        ws.cell(row=i, column=8, value=row["note"])
+    for col, w in zip("ABCDEFGH", [10, 10, 12, 12, 12, 12, 12, 28]):
+        ws.column_dimensions[col].width = w
+
+
+def sheet_asset_allocation(wb: Workbook) -> None:
+    ws = wb.create_sheet("10월자산분배")
+    ws["A1"] = "2026년 10월~ — 급여일+1 자동이체 (세후 ~470만·정규)"
+    ws["A1"].font = TITLE_FONT
+    ws["A2"] = "8~9월은 수습·전환 → 「2026급여배분」 시트 참고"
+    _header_row(ws, 4, ["순서", "항목", PERSON1_NAME, PERSON2_NAME, "목적 계좌"])
     for i, (name, p1, p2, acct) in enumerate(ASSET_ALLOCATION_AUGUST, 1):
-        r = i + 3
+        r = i + 4
         ws.cell(row=r, column=1, value=i)
         ws.cell(row=r, column=2, value=name)
         ws.cell(row=r, column=3, value=p1)
@@ -341,13 +407,13 @@ def sheet_monthly_budget(wb: Workbook) -> None:
         ("고정비", "장학금 이자", FIXED_LOAN_SCHOLAR_INTEREST, PERSON1_NAME, ""),
         ("고정비", "카카오 긴급", FIXED_LOAN_KAKAO, PERSON1_NAME, ""),
         ("고정비", "건강보험(여친)", FIXED_NHIS_P2, PERSON2_NAME, ""),
-        ("식비", "주간 장보기", FOOD_GROCERY, "공동", "배달·외식 거의 없음"),
+        ("식비", "주간 장보기", FOOD_GROCERY, COHAB_HUB_INSTITUTION, "공동계좌에서 결제"),
         ("용돈", "개인 용돈", ALLOWANCE_P1, PERSON1_NAME, "취미·의류 등"),
         ("용돈", "개인 용돈", ALLOWANCE_P2, PERSON2_NAME, ""),
         ("저축", "ISA 서민형", SAVE_ISA, PERSON1_NAME, "예금·MMF"),
-        ("저축", "집마련 CMA·파킹", SAVE_HOUSE, "각자", f"CMA {SAVE_HOUSE_P1:,} + 파킹 {SAVE_HOUSE_P2:,}"),
+        ("저축", "집마련 CMA·토스파킹", SAVE_HOUSE, "각자", f"CMA {SAVE_HOUSE_P1:,} + {P2_TOSS_ACCOUNT_ID} {SAVE_HOUSE_P2 + SAVE_VISA_BUFFER_P2:,}"),
         ("저축", "연금저축", SAVE_PENSION_P1, PERSON1_NAME, "세액공제용"),
-        ("저축", "비자 비상", SAVE_VISA_BUFFER_P2, PERSON2_NAME, ""),
+        ("저축", "비자 비상", SAVE_VISA_BUFFER_P2, PERSON2_NAME, f"{P2_TOSS_ACCOUNT_ID} (집마련과 동일)"),
     ]
     for r, row in enumerate(data, 2):
         for c, v in enumerate(row, 1):
@@ -403,7 +469,7 @@ def sheet_timeline(wb: Workbook) -> None:
     ws = wb.create_sheet("타임라인")
     _header_row(ws, 1, ["시기", "구분", "할 일", "목표 잔고(집자금)"])
     milestones = [
-        ("2026.07", "P0 생존", "현철 월급만·고정비 123만·ISA/연금 보류", JULY_BUFFER),
+        ("2026.07", "P0 생존", f"현철 월급만·고정비 {FIXED_JULY_TOTAL // 10_000}만·ISA/연금 보류", JULY_BUFFER),
         ("2026.08", "P1 저축전성", "급여일 자산분배·여가 0", MONTHLY_INVEST_TOTAL),
         ("2027.02", "비자", "D-10 연장 (TOPIK6)", 300_000),
         ("2028.H2", "P2 혼인", "혼인신고·예식·신혼특공", 40_000_000),
@@ -561,6 +627,7 @@ def main() -> None:
     sheet_fixed_costs(wb)
     sheet_per_person_fixed(wb)
     sheet_july(wb)
+    sheet_payroll_2026(wb)
     sheet_accounts(wb)
     sheet_house_fund(wb)
     sheet_asset_allocation(wb)
