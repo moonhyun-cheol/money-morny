@@ -110,15 +110,16 @@ def create_spreadsheet(sheets_service) -> str:
 
 
 def _cell(row: int, col: int, value: str | float | int | None = None, formula: str | None = None) -> dict:
+    """CellData for updateCells (use inside _row_data)."""
     cell: dict[str, Any] = {}
     if formula:
         cell["userEnteredValue"] = {"formulaValue": formula}
     elif value is not None:
-        if isinstance(value, (int, float)):
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
             cell["userEnteredValue"] = {"numberValue": value}
         else:
             cell["userEnteredValue"] = {"stringValue": str(value)}
-    return {"values": [cell] if cell else []}
+    return cell
 
 
 def _row_data(cells: list) -> dict:
