@@ -348,7 +348,8 @@ PHYSICAL_ACCOUNT_COUNT_JULY = 7  # 현철 5 + 용돈통장2(잔액0) · 여친 �
 ALLOWANCE_FUNDING_PAUSED = True  # 통장은 있음 · 7월 용돈 이체액 0
 JULY_TO_ALLOWANCE_P1 = 50_000  # KB→토스 용돈 (7/7)
 JULY_ALLOWANCE_SHOES = 19_000
-JULY_ALLOWANCE_BALANCE = 31_000
+JULY_ALLOWANCE_SNACK = 16_061  # 간식 · 7/8
+JULY_ALLOWANCE_BALANCE = JULY_TO_ALLOWANCE_P1 - JULY_ALLOWANCE_SHOES - JULY_ALLOWANCE_SNACK  # 14,939
 JULY_TO_ALLOWANCE_P2 = 0
 ACCOUNTS_TO_OPEN: list[dict[str, str]] = []  # 실계좌 기준 추가 개설 없음
 
@@ -587,6 +588,7 @@ JULY_SAMSUNG_TRANSPORT = 5_000  # 교통·주차
 JULY_SAMSUNG_ONLINE = 8_374  # 온라인쇼핑
 JULY_SAMSUNG_MISC = 7_000  # 생활잡화
 JULY_SAMSUNG_PIKPAK = 4_581  # Pickpack · 8월~ CMA 정기
+JULY_SAMSUNG_OLIVEYOUNG = 49_970  # 올리브영 · 7/8
 JULY_SAMSUNG_SPENT = (
     JULY_SAMSUNG_USED
     + JULY_SAMSUNG_DAISO
@@ -594,10 +596,11 @@ JULY_SAMSUNG_SPENT = (
     + JULY_SAMSUNG_ONLINE
     + JULY_SAMSUNG_MISC
     + JULY_SAMSUNG_PIKPAK
-)  # 58,725
+    + JULY_SAMSUNG_OLIVEYOUNG
+)  # 108,695
 P1_VISA_BUFFER_JULY = 299_339  # CMA 내 비자금 (플랜 저축과 별도)
-JULY_SAMSUNG_TOTAL = 539_695  # 실잔액 (비자금 포함)
-JULY_SAMSUNG_BALANCE = JULY_SAMSUNG_TOTAL - P1_VISA_BUFFER_JULY  # 240,356
+JULY_SAMSUNG_TOTAL = 489_725  # 실잔액 (비자금 포함)
+JULY_SAMSUNG_BALANCE = JULY_SAMSUNG_TOTAL - P1_VISA_BUFFER_JULY  # 190,386
 JULY_KAKAOPAY_MART = 14_380
 JULY_KAKAOPAY_LUNCH = 20_000
 JULY_KAKAOPAY_CVS = 2_500
@@ -606,6 +609,7 @@ JULY_KAKAOPAY_DINNER = 15_000
 JULY_KAKAOPAY_CAFE = 8_000
 JULY_KAKAOPAY_CVS2 = 7_000
 JULY_KAKAOPAY_MART2 = 35_790
+JULY_KAKAOPAY_FOOD3 = 7_800  # 식비 · 7/8
 JULY_KAKAOPAY_SPENT = (
     JULY_KAKAOPAY_MART
     + JULY_KAKAOPAY_LUNCH
@@ -615,16 +619,29 @@ JULY_KAKAOPAY_SPENT = (
     + JULY_KAKAOPAY_CAFE
     + JULY_KAKAOPAY_CVS2
     + JULY_KAKAOPAY_MART2
-)  # 109,170
-JULY_KAKAOPAY_BALANCE = JULY_TO_FOOD - JULY_KAKAOPAY_SPENT  # 440,830
+    + JULY_KAKAOPAY_FOOD3
+)  # 116,970
+JULY_KAKAOPAY_BALANCE = JULY_TO_FOOD - JULY_KAKAOPAY_SPENT  # 433,030
 
 # 7월 KB 스타뱅킹 변동비
 JULY_KB_CVS = 3_570
 JULY_KB_CAFE = 4_000
 JULY_KB_MISC = 3_000  # 생활잡화
 JULY_KB_DAISO = 21_392
+JULY_KB_REFUND = 5_000  # 환불금 · 7/8
 JULY_KB_SPENT = JULY_KB_CVS + JULY_KB_CAFE + JULY_KB_MISC + JULY_KB_DAISO  # 31,962
-JULY_KB_BALANCE = 486_898
+JULY_KB_BALANCE = 486_898 + JULY_KB_REFUND  # 491,898
+
+# ── 7/9 삼성 CMA 자유입출금 정리 이체 (내 계좌 간 이동 · 지출 아님) ──
+# CMA 잔액 전액 이동: 10만 → KB 고정비 보강, 나머지 → 토스(현철) 파킹
+JULY_CMA_TO_KB = 100_000
+JULY_CMA_TO_TOSS = JULY_SAMSUNG_TOTAL - JULY_CMA_TO_KB  # 389,725 (CMA 나머지 전액)
+
+JULY_KB_BALANCE_FINAL = JULY_KB_BALANCE + JULY_CMA_TO_KB  # 591,898
+JULY_SAMSUNG_TOTAL_FINAL = (
+    JULY_SAMSUNG_TOTAL - JULY_CMA_TO_KB - JULY_CMA_TO_TOSS
+)  # 0 · CMA 비움
+JULY_TOSS_BALANCE_FINAL = JULY_ALLOWANCE_BALANCE + JULY_CMA_TO_TOSS  # 404,664 (용돈 14,939 + 파킹 389,725)
 
 # 7월 실제 지출 (변동비 · 시트 동기화용) — (날짜, 카테고리, 금액, 메모, 담당자키)
 JULY_ACTUAL_EXPENSES: list[tuple[str, str, int, str, str]] = [
@@ -647,6 +664,14 @@ JULY_ACTUAL_EXPENSES: list[tuple[str, str, int, str, str]] = [
     ("2026-07-07", "식비", JULY_KAKAOPAY_MART2, "마트 · 카카오페이", "현철"),
     ("2026-07-07", "구독", JULY_SAMSUNG_PIKPAK, "Pickpack · 삼성CMA", "현철"),
     ("2026-07-07", "쇼핑", JULY_ALLOWANCE_SHOES, "신발 · 토스용돈", "현철"),
+    ("2026-07-08", "식비", JULY_KAKAOPAY_FOOD3, "식비 · 카카오페이", "현철"),
+    ("2026-07-08", "쇼핑", JULY_SAMSUNG_OLIVEYOUNG, "올리브영 · 삼성CMA", "현철"),
+    ("2026-07-08", "식비", JULY_ALLOWANCE_SNACK, "간식 · 토스용돈", "현철"),
+]
+
+# 7월 실제 수입 (시트 동기화용) — (날짜, 유형, 금액, 메모, 담당자키)
+JULY_ACTUAL_INCOME: list[tuple[str, str, int, str, str]] = [
+    ("2026-07-08", "환불", JULY_KB_REFUND, "환불금 · KB스타뱅킹", "현철"),
 ]
 
 # ── 10월~ 급여일 자산분배 (급여일 +1일 자동이체 권장) ──
@@ -1206,8 +1231,8 @@ INVESTMENT_PRODUCTS = [
         "ticker": "",
         "name": P1_SALARY_HUB,
         "qty": 1,
-        "price": JULY_KB_BALANCE,
-        "note": f"{P1_SALARY_ACCT} · 사용 {JULY_KB_SPENT:,}",
+        "price": JULY_KB_BALANCE_FINAL,
+        "note": f"{P1_SALARY_ACCT} · 사용 {JULY_KB_SPENT:,} · CMA→KB {JULY_CMA_TO_KB:,}",
     },
     {
         "account_type": "CMA",
@@ -1246,8 +1271,8 @@ INVESTMENT_PRODUCTS = [
         "ticker": "",
         "name": P1_SECURITIES_JULY,
         "qty": 1,
-        "price": JULY_SAMSUNG_TOTAL,
-        "note": f"저축 {JULY_SAMSUNG_BALANCE:,} + 비자 {P1_VISA_BUFFER_JULY:,} · 사용 {JULY_SAMSUNG_SPENT:,}",
+        "price": JULY_SAMSUNG_TOTAL_FINAL,
+        "note": f"7/9 정리 이체 · KB {JULY_CMA_TO_KB:,} + 토스 {JULY_CMA_TO_TOSS:,} · 잔액 0",
     },
     {
         "account_type": "CMA",
@@ -1276,8 +1301,11 @@ INVESTMENT_PRODUCTS = [
         "ticker": "",
         "name": P1_ALLOWANCE_BANK,
         "qty": 1,
-        "price": JULY_ALLOWANCE_BALANCE,
-        "note": f"{P1_ALLOWANCE_ACCT} · KB이체 {JULY_TO_ALLOWANCE_P1:,} · 신발 {JULY_ALLOWANCE_SHOES:,}",
+        "price": JULY_TOSS_BALANCE_FINAL,
+        "note": (
+            f"{P1_ALLOWANCE_ACCT} · 용돈 {JULY_ALLOWANCE_BALANCE:,}"
+            f" + CMA파킹 {JULY_CMA_TO_TOSS:,}"
+        ),
     },
     {
         "account_type": "CMA",

@@ -106,9 +106,9 @@ def build_expense_rows() -> list[list]:
 
 
 def build_income_rows() -> list[list]:
-    from config.life_plan import JULY_NET_INCOME
+    from config.life_plan import JULY_ACTUAL_INCOME, JULY_NET_INCOME
 
-    return [
+    rows: list[list] = [
         ["날짜", "담당자", "유형", "금액", "메모"],
         [
             "2026-07-01",
@@ -118,6 +118,9 @@ def build_income_rows() -> list[list]:
             "7월 입금(6월 근무분·수습)",
         ],
     ]
+    for date, kind, amt, memo, who in JULY_ACTUAL_INCOME:
+        rows.append([date, _owner(who), kind, amt, memo])
+    return rows
 
 
 def build_asset_rows() -> list[list]:
