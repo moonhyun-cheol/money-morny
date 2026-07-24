@@ -120,7 +120,7 @@ FIXED_SHARED_HALF = FIXED_SHARED // 2  # 325,000 — 8월~ 인당
 
 # ── [2] 통신 ──
 FIXED_PHONE_KT = 2_890
-FIXED_PHONE_SKT = 34_000
+FIXED_PHONE_SKT = 160_000  # 요금+휴대폰 교체할부 포함
 FIXED_PHONE_P2 = 20_000  # 여친
 FIXED_PHONE = FIXED_PHONE_KT + FIXED_PHONE_SKT + FIXED_PHONE_P2
 
@@ -130,7 +130,7 @@ FIXED_INSURANCE = 138_290
 # ── [4] 구독 (원/월) ──
 SUB_ICLOUD = 5_000  # 실청구 ~4,400 · 카카오페이 5,000 가정
 SUB_COUPANG = 7_890
-SUB_LIMBUS = 9_900 + 4_900  # 14,800
+SUB_LIMBUS = 100_000  # 림버스 구독 상향 (구 14,800)
 SUB_SPOTIFY = 11_990
 SUB_YOUTUBE = 10_900  # 구 14,900(토스·21일) → 2026-05~ 갈아탐
 SUB_CURSOR_KRW = 120_000  # Cursor Pro+ 구독 (2026-06~ · 월 12만)
@@ -213,12 +213,12 @@ FIXED_COST_ITEMS: list[tuple[str, int, str, str]] = [
     ("월세+관리비", FIXED_RENT, PERSON1_NAME, "개인고정·평소 ½ · 7월 전액 →KB공동"),
     ("전기", FIXED_ELECTRIC, PERSON1_NAME, "개인고정·평소 ½ · 7월 전액 →KB공동"),
     ("KT", FIXED_PHONE_KT, PERSON1_NAME, "FBS ~23일"),
-    ("SKT", FIXED_PHONE_SKT, PERSON1_NAME, "지로 ~22일"),
+    ("SKT", FIXED_PHONE_SKT, PERSON1_NAME, "요금+휴대폰 교체할부"),
     ("통신(여친)", FIXED_PHONE_P2, PERSON2_NAME, "8월~ 여친 우리통장"),
     ("보험", FIXED_INSURANCE, PERSON1_NAME, "2026-06-04 KB카드"),
     ("iCloud", SUB_ICLOUD, PERSON1_NAME, "카카오 ~5천"),
     ("쿠팡 와우", SUB_COUPANG, PERSON1_NAME, "27일"),
-    ("림버스컴퍼니", SUB_LIMBUS, PERSON1_NAME, "9900+4900"),
+    ("림버스컴퍼니", SUB_LIMBUS, PERSON1_NAME, "구독 10만"),
     ("Spotify", SUB_SPOTIFY, PERSON1_NAME, "3일"),
     ("YouTube Premium", SUB_YOUTUBE, PERSON1_NAME, "28일 전후"),
     ("Cursor", SUB_CURSOR_KRW, PERSON1_NAME, "Pro+ 12만/월"),
@@ -232,8 +232,8 @@ FIXED_COST_ITEMS: list[tuple[str, int, str, str]] = [
 
 # ── 식비·용돈 ──
 FOOD_GROCERY = 550_000
-ALLOWANCE_P1 = 150_000
-ALLOWANCE_P2 = 200_000
+ALLOWANCE_P1 = 100_000  # 토스 용돈 (구 150,000 → 차액 집마련)
+ALLOWANCE_P2 = 300_000  # 카카오페이 용돈 (구 200,000 → 차액 토스저축)
 SAVE_MIN_RATE = 0.5  # 개인 세후 소득의 최소 50% 저축
 
 # 7월 축소 (현철 월급만)
@@ -290,7 +290,8 @@ SAVE_PENSION_P1_AFTER_MOVE_IN = 200_000
 SAVE_VISA_BUFFER_P2 = 50_000  # P2 토스 저축 내 비자 목표(집저축과 동일 통장)
 SAVE_SUBSCRIPTION_MIN = 0
 
-FOOD_P1, FOOD_P2 = food_split_for_save_targets(NET_INCOME_P1, NET_INCOME_P2)
+# 식비 분배 고정 (재조정 시 주초유 몫 유지 · 자동 재분배 방지)
+FOOD_P1, FOOD_P2 = 74_000, 476_000
 SAVE_P1_TOTAL = personal_savings(
     NET_INCOME_P1, FIXED_P1_TOTAL, FOOD_P1, ALLOWANCE_P1
 )
