@@ -1,11 +1,13 @@
-# 재무관리 (Google Sheets + Docs)
+# 인생 플랜 (재무 · 이직)
 
-투자 중심 **2인 가구** 재무관리 시스템입니다. Google Sheets에서 일별 지출·수입·보유 종목을 관리하고, **한눈에보기** 탭에서 KPI와 차트를 확인합니다.
+**2인 가구 인생 플랜** 저장소입니다. 재무(통장·저축·입주)와 이직(데이터·AI·자동화)을 같이 둡니다.  
+Google Sheets에서 일별 지출·수입·보유 종목을 관리하고, **한눈에보기** 탭에서 KPI와 차트를 확인합니다.
 
 **GitHub:** [github.com/moonhyun-cheol/money-morny](https://github.com/moonhyun-cheol/money-morny)
 
-📖 **자세한 설명서:** [`docs/사용설명서.md`](docs/사용설명서.md)  
-📖 **인생 플랜 (운정 59형):** [`docs/인생플랜.md`](docs/인생플랜.md) · Excel [`sheets/인생플랜.xlsx`](sheets/인생플랜.xlsx)  
+📖 **인생 플랜 허브:** [`docs/인생플랜.md`](docs/인생플랜.md) · Excel [`sheets/인생플랜.xlsx`](sheets/인생플랜.xlsx)  
+📖 **이직 준비 (3년):** [`docs/이직준비_3년계획.md`](docs/이직준비_3년계획.md) — 본격 **2026-08-10~**  
+📖 **재무 사용설명서:** [`docs/사용설명서.md`](docs/사용설명서.md)  
 📖 **인생라인 × Google 연동:** [`docs/인생라인_가이드.md`](docs/인생라인_가이드.md)  
 📖 **다른 PC · Google 연동:** [`docs/사용설명서.md#다른-컴퓨터에서-github-받기--google-연동`](docs/사용설명서.md#다른-컴퓨터에서-github-받기--google-연동)
 
